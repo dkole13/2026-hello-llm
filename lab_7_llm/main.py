@@ -215,7 +215,7 @@ class LLMPipeline(AbstractLLMPipeline):
 
         outputs = self._model.generate(**inputs, max_length=self._max_length)
         decoded = self._tokenizer.batch_decode(outputs, skip_special_tokens=True)
-        return [text[len(prompt):] for text, prompt in zip(decoded, texts)]
+        return [text[len(prompt) + 1:] for text, prompt in zip(decoded, texts)]
 
 
 class TaskEvaluator(AbstractTaskEvaluator):
