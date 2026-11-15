@@ -5,6 +5,7 @@ Working with Large Language Models.
 """
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 
+import numpy as np
 import pandas as pd
 import torch
 
@@ -53,13 +54,16 @@ class RawDataPreprocessor(AbstractRawDataPreprocessor):
         Returns:
             dict: Dataset key properties
         """
+        temp = self._raw_data.replace('', np.nan)
+        temp = temp.dropna(axis=0)
+
         analysis = {
             'dataset_number_of_samples': len(self._raw_data),
             'dataset_columns': len(self._raw_data.columns),
             'dataset_duplicates': int(self._raw_data.duplicated().sum()),
             'dataset_empty_rows': int((self._raw_data == "").any(axis=1).sum()),
-            'dataset_sample_min_len': int(self._raw_data['instruction'].dropna(axis=0).str.len().min()),  # TODO: may be an error in the reference
-            'dataset_sample_max_len': int(self._raw_data['instruction'].dropna(axis=0).str.len().max())  # TODO: may be an error in the reference
+            'dataset_sample_min_len': int(temp['instruction'].dropna(axis=0).str.len().min()),
+            'dataset_sample_max_len': int(temp['instruction'].dropna(axis=0).str.len().max())
         }
 
         return analysis
@@ -172,7 +176,8 @@ class LLMPipeline(AbstractLLMPipeline):
             pd.DataFrame: Data with predictions
         """
         dataloader = DataLoader(self._dataset, batch_size=self._batch_size,
-                                shuffle=False, drop_last=False)
+                                shuffle=False, drop_last=False,
+                                collate_fn=lambda samples: samples)
         predictions = []
         for batch in dataloader:
             predictions.extend(self._infer_batch(batch))
@@ -193,8 +198,6 @@ class LLMPipeline(AbstractLLMPipeline):
         Returns:
             list[str]: Model predictions as strings
         """
-        # self._model.eval()
-
         texts = []
         for sample in sample_batch:
             if len(sample) == 1:
@@ -211,8 +214,8 @@ class LLMPipeline(AbstractLLMPipeline):
         ).to(self._device)
 
         outputs = self._model.generate(**inputs, max_length=self._max_length)
-        outputs = outputs[:, inputs["input_ids"].shape[1]:]
-        return self._tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        decoded = self._tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        return [text[len(prompt):] for text, prompt in zip(decoded, texts)]
 
 
 class TaskEvaluator(AbstractTaskEvaluator):
