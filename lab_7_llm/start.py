@@ -4,12 +4,11 @@ Starter for demonstration of laboratory work.
 
 # pylint: disable=too-many-locals, undefined-variable, unused-import
 import json
-
 from pathlib import Path
 
+from admin_utils.constants import DEVICE, GLOBAL_BATCH_SIZE_TEST, GLOBAL_MAX_LENGTH
 from core_utils.llm.time_decorator import report_time
-from lab_7_llm.main import RawDataImporter, RawDataPreprocessor, TaskDataset, LLMPipeline
-from admin_utils.constants import GLOBAL_MAX_LENGTH, GLOBAL_BATCH_SIZE_TEST, DEVICE
+from lab_7_llm.main import LLMPipeline, RawDataImporter, RawDataPreprocessor, TaskDataset
 
 
 @report_time
@@ -17,11 +16,14 @@ def main() -> None:
     """
     Run the translation pipeline.
     """
-    with open(Path(__file__).parent / 'settings.json', 'r') as f:
+    with open(Path(__file__).parent / 'settings.json', 'r', encoding='utf-8') as f:
         settings = json.load(f)
 
     importer = RawDataImporter(settings['parameters']['dataset'])
     importer.obtain()
+
+    if importer.raw_data is None:
+        raise ValueError('"importer.raw_data" is None')
 
     preprocessor = RawDataPreprocessor(importer.raw_data)
     preprocessor.transform()
