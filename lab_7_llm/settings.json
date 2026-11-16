@@ -2,7 +2,7 @@
   "parameters": {
     "model": "EleutherAI/pythia-160m-deduped",
     "dataset": "tatsu-lab/alpaca",
-    "metrics": []
+    "metrics": ["bleu", "rouge"]
   },
   "target_score": 8
 }

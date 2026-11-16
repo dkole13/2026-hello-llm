@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import torch
 from datasets import load_dataset
+from evaluate import load
 from pandas import DataFrame
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -183,7 +184,7 @@ class LLMPipeline(AbstractLLMPipeline):
             predictions.extend(self._infer_batch(batch))
 
         return DataFrame({
-            'question': self._dataset.data['question'],
+            'target': self._dataset.data['output'],
             'predictions': predictions
         })
 
@@ -231,6 +232,8 @@ class TaskEvaluator(AbstractTaskEvaluator):
             data_path (pathlib.Path): Path to predictions
             metrics (Iterable[Metrics]): List of metrics to check
         """
+        self._metrics = metrics
+        self._data_path = data_path
 
     def run(self) -> dict:
         """
@@ -239,3 +242,22 @@ class TaskEvaluator(AbstractTaskEvaluator):
         Returns:
             dict: A dictionary containing information about the calculated metric
         """
+        targets_predictions_df = pd.read_csv(self._data_path)
+
+        result = {}
+
+        for metric in self._metrics:
+            metric_name = metric.value if isinstance(metric, Metrics) else str(metric)
+            metric_loaded = load(metric_name)
+            metric_result = metric_loaded.compute(
+                predictions=targets_predictions_df['predictions'].to_list(),
+                references=targets_predictions_df['target'].to_list(),
+            )
+
+            value = metric_result.get(metric_name)
+            if value is None and metric_name == "rouge":
+                value = metric_result.get("rougeLsum")
+
+            result[metric_name] = float(value)
+
+        return result
