@@ -33,13 +33,13 @@ def main() -> None:
 
     preprocessor = RawDataPreprocessor(importer.raw_data)
     preprocessor.transform()
-    # print(preprocessor.data)
-    # print('----------')
+    print(preprocessor.data)
+    print('----------')
 
     analysis = preprocessor.analyze()
     for k, v in analysis.items():
         print(f'{k}: {v}')
-    # print('----------')
+    print('----------')
 
     dataset = TaskDataset(preprocessor.data.iloc[:5])
 
@@ -48,12 +48,12 @@ def main() -> None:
 
     sample = dataset[0]
     sample_inference = pipeline.infer_sample(sample)
-    # print(f'{sample}: {sample_inference}')
-    # print('----------')
+    print(f'{sample}: {sample_inference}')
+    print('----------')
 
     dataset_inference = pipeline.infer_dataset()
     print(dataset_inference)
-    # print('----------')
+    print('----------')
 
     predictions_path = Path(__file__).parent / 'dist' / 'predictions.csv'
     predictions_path.parent.mkdir(parents=True, exist_ok=True)
