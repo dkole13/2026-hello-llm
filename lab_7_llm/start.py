@@ -41,7 +41,7 @@ def main() -> None:
         print(f'{k}: {v}')
     print('----------')
 
-    dataset = TaskDataset(preprocessor.data.iloc[:5])
+    dataset = TaskDataset(preprocessor.data.iloc[:100])
 
     pipeline = LLMPipeline(settings['parameters']['model'], dataset,
                            GLOBAL_MAX_LENGTH, GLOBAL_BATCH_SIZE_TEST, DEVICE)

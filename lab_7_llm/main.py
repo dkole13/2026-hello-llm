@@ -3,6 +3,7 @@ Laboratory work.
 
 Working with Large Language Models.
 """
+
 # pylint: disable=too-few-public-methods, undefined-variable, too-many-arguments, super-init-not-called
 
 from pathlib import Path
@@ -147,8 +148,8 @@ class LLMPipeline(AbstractLLMPipeline):
             device (str): The device for inference
         """
         super().__init__(model_name, dataset, max_length, batch_size, device)
-        self._model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m-deduped")
-        # self._model.to(self._device)
+        self._model = AutoModelForCausalLM.from_pretrained("EleutherAI/pythia-160m-deduped",
+                                                           dtype=torch.float32)
         self._tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-160m-deduped",
                                                         padding_side="left")
 
